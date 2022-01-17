@@ -27,8 +27,16 @@ bool firstMouse = true;
 float deltaTime = 0.0f; // time between current frame and last frame
 float lastFrame = 0.0f;
 
-int main()
+int main(int argc, char* argv[])
 {
+    if (argc < 2)
+    {
+        // The second argument should be the absolute path to project shader directory.
+        // It will be generated automatically by Premake.
+        return 1;
+    }
+    std::string projecShadertPath = argv[1];
+
     // glfw: initialize and configure
     // ------------------------------
     glfwInit();
@@ -71,8 +79,8 @@ int main()
 
     // build and compile our shader program
     // ------------------------------------
-    Shader ourShader("../../shader/shaders.vs", "../../shader/shaders.fs");
-    Shader lampShader("../../shader/shaders.vs", "../../shader/lampShader.fs");
+    Shader ourShader(projecShadertPath, "shaders.vs", "shaders.fs");
+    Shader lampShader(projecShadertPath, "lampShader.vs", "lampShader.fs");
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
     float vertices[] = {
@@ -159,7 +167,7 @@ int main()
     // -----------
     while (!glfwWindowShouldClose(window))
     {
-        float currentFrame = glfwGetTime();
+        float currentFrame = static_cast<float>(glfwGetTime());
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
         // input
@@ -238,8 +246,11 @@ void processInput(GLFWwindow* window)
         camera.ProcessKeyboard(Camera_Movement::RIGHT, deltaTime);
 }
 
-void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+void mouse_callback(GLFWwindow* window, double _xpos, double _ypos)
 {
+    float xpos = static_cast<float>(_xpos);
+    float ypos = static_cast<float>(_ypos);
+
     if (firstMouse)
     {
         lastX = xpos;
@@ -257,7 +268,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
-    camera.ProcessMouseScroll(yoffset);
+    camera.ProcessMouseScroll(static_cast<float>(yoffset));
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
