@@ -16,7 +16,7 @@ class Shader
 public:
 	unsigned int ID;
 
-	Shader(const GLchar* vertexPath, const GLchar* fragmentPath)
+	Shader(const std::string& parentPath, const GLchar* vertexPath, const GLchar* fragmentPath)
 	{
 		// 1. retrieve the vertex/fragment source code from filepath
 		std::string vertexCode;
@@ -28,8 +28,8 @@ public:
 		try
 		{
 			// open files
-			vShaderFile.open(vertexPath);
-			fShaderFile.open(fragmentPath);
+			vShaderFile.open(parentPath + vertexPath);
+			fShaderFile.open(parentPath + fragmentPath);
 			std::stringstream vShaderStream, fShaderStream;
 			// read file's buffer contents into streams
 			vShaderStream << vShaderFile.rdbuf();
