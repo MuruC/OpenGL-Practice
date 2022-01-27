@@ -14,7 +14,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
-unsigned int loadTexture(char const* path);
+unsigned int loadTexture(char const* path, bool isEmission);
 
 // settings
 const unsigned int SCR_WIDTH = 800;
@@ -175,20 +175,26 @@ int main(int argc, char* argv[])
    std::string path = "../../resources/textures/container2.png";
    char* pathcstr = new char[path.length() + 1];
    std::strcpy(pathcstr, path.c_str());
-   unsigned int diffuseMap = loadTexture(pathcstr);
+   unsigned int diffuseMap = loadTexture(pathcstr, false);
    delete[] pathcstr;
 
-   lightingShader.use();
-   lightingShader.setInt("material.diffuse", 0);
 
    path = "../../resources/textures/container2_specular.png";
    pathcstr = new char[path.length() + 1];
    std::strcpy(pathcstr, path.c_str());
-   unsigned int specularMap = loadTexture(pathcstr);
+   unsigned int specularMap = loadTexture(pathcstr, false);
    delete[] pathcstr;
 
-   lightingShader.setInt("material.specular", 1);
+   path = "../../resources/textures/emission.png";
+   pathcstr = new char[path.length() + 1];
+   std::strcpy(pathcstr, path.c_str());
+   unsigned int emissionMap = loadTexture(pathcstr, true);
+   delete[] pathcstr;
 
+   lightingShader.use();
+   lightingShader.setInt("material.diffuse", 0);
+   lightingShader.setInt("material.specular", 1);
+   lightingShader.setInt("material.emission",2);
    // render loop
    // -----------
    while (!glfwWindowShouldClose(window))
@@ -208,8 +214,8 @@ int main(int argc, char* argv[])
        // be sure to activate shader when setting uniforms/drawing objects
        lightingShader.use();
        lightingShader.setVec3("viewPos", camera.Position);
-       lightingShader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
        lightingShader.setFloat("material.shininess", 32.0f);
+       lightingShader.setFloat("time", glfwGetTime());
        lightingShader.setVec3("light.ambient", 0.2f, 0.2f, 0.2f);
        lightingShader.setVec3("light.diffuse", 0.5f, 0.5f, 0.5f);
        lightingShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
@@ -233,6 +239,9 @@ int main(int argc, char* argv[])
        // bind specular map
        glActiveTexture(GL_TEXTURE1);
        glBindTexture(GL_TEXTURE_2D, specularMap);
+       // bind emission map
+       glActiveTexture(GL_TEXTURE2);
+       glBindTexture(GL_TEXTURE_2D, emissionMap);
 
        glBindVertexArray(cubeVAO); // seeing as we only have a single cubeVAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
        glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
@@ -320,7 +329,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 }
 
 //utility function for loading a 2D texture from file
-unsigned int loadTexture(char const* path)
+unsigned int loadTexture(char const* path, bool isEmission)
 {
     unsigned int textureID;
     glGenTextures(1, &textureID);
@@ -341,10 +350,20 @@ unsigned int loadTexture(char const* path)
         glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        if (!isEmission)
+        {
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        }
+        else
+        {
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        }
     
         stbi_image_free(data);
     }
