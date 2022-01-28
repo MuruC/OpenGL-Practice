@@ -136,6 +136,20 @@ int main(int argc, char* argv[])
         0, 1, 3, // first triangle
         1, 2, 3  // second triangle
     };
+
+    glm::vec3 cubePositions[] = {
+        glm::vec3(0.0f,  0.0f,  0.0f),
+        glm::vec3(2.0f,  5.0f, -15.0f),
+        glm::vec3(-1.5f, -2.2f, -2.5f),
+        glm::vec3(-3.8f, -2.0f, -12.3f),
+        glm::vec3(2.4f, -0.4f, -3.5f),
+        glm::vec3(-1.7f,  3.0f, -7.5f),
+        glm::vec3(1.3f, -2.0f, -2.5f),
+        glm::vec3(1.5f,  2.0f, -2.5f),
+        glm::vec3(1.5f,  0.2f, -1.5f),
+        glm::vec3(-1.3f,  1.0f, -1.5f)
+    };
+
     glm::vec3 cubePosition = glm::vec3(0.0f, 0.0f, 0.0f);
 
     unsigned int VBO, cubeVAO, EBO;
@@ -177,17 +191,15 @@ int main(int argc, char* argv[])
     unsigned int diffuseMap = loadTexture(pathcstr);
     delete[] pathcstr;
 
-    lightingShader.use();
-    lightingShader.setInt("material.diffuse", 0);
-
     path = "../../resources/textures/container2_specular.png";
     pathcstr = new char[path.length() + 1];
     std::strcpy(pathcstr, path.c_str());
     unsigned int specularMap = loadTexture(pathcstr);
     delete[] pathcstr;
 
+    lightingShader.use();
+    lightingShader.setInt("material.diffuse", 0);
     lightingShader.setInt("material.specular", 1);
-
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window))
@@ -206,13 +218,17 @@ int main(int argc, char* argv[])
 
         // be sure to activate shader when setting uniforms/drawing objects
         lightingShader.use();
+        lightingShader.setVec3("light.position", lightPos);
         lightingShader.setVec3("viewPos", camera.Position);
-        lightingShader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
+
         lightingShader.setFloat("material.shininess", 32.0f);
         lightingShader.setVec3("light.ambient", 0.2f, 0.2f, 0.2f);
         lightingShader.setVec3("light.diffuse", 0.5f, 0.5f, 0.5f);
         lightingShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
-        lightingShader.setVec3("light.position", lightPos);
+        lightingShader.setFloat("light.constant", 1.0f);
+        lightingShader.setFloat("light.linear", 0.09f);
+        lightingShader.setFloat("light.quadratic", 0.032f);
+
         // create transformations
 
         glm::mat4 view = glm::mat4(1.0f);
@@ -235,10 +251,17 @@ int main(int argc, char* argv[])
 
         glBindVertexArray(cubeVAO); // seeing as we only have a single cubeVAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
         glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
-        unsigned int modelLoc = glGetUniformLocation(lightingShader.ID, "model");
-        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-
+        for (unsigned int i = 0; i < 10; ++i)
+        {
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, cubePositions[i]);
+            float angle = 20.0f * i;
+            model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f,0.3f,0.5f));
+            unsigned int modelLoc = glGetUniformLocation(lightingShader.ID, "model");
+            glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+        }
+        model = glm::mat4(1.0f);
         lightCubeShader.use();
         //move lamp cube
         glBindVertexArray(lightCubeVAO);
