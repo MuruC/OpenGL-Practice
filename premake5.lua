@@ -58,11 +58,13 @@ local function createPracticeProject(projectName)
 		libdirs
 		{
 			"library/lib/",
+			"library/lib/assimp/",
 		}
 		
 		links
 		{
 			"glfw3",
+			"assimp-vc142-mt",
 		}
 end
 
