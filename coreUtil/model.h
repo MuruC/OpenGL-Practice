@@ -3,6 +3,20 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
+
+#include <glad/glad.h> 
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <stb_image.h>
+
+
+#include <string>
+#include <fstream>
+#include <sstream>
+#include <iostream>
+#include <map>
+#include <vector>
 class Model
 {
 public:
@@ -79,13 +93,32 @@ private:
 			vertices.emplace_back(vertex);
 		}
 		// process indices
+		for (unsigned int i = 0; i < mesh->mNumFaces; ++i)
+		{
+			aiFace face = mesh->mFaces[i];
+			for (unsigned int j = 0; j < face.mNumIndices; ++j)
+				indices.push_back(face.mIndices[j]);
+		}
 
 		// process material
 		if (mesh->mMaterialIndex >= 0)
 		{
+			// process materials
+			aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+			// we assume a convention for sampler names in the shaders. Each diffuse texture should be named
+			// as 'texture_diffuseN' where N is a sequential number ranging from 1 to MAX_SAMPLER_NUMBER. 
+			// Same applies to other texture as the following list summarizes:
+			// diffuse: texture_diffuseN
+			// specular: texture_specularN
+			// normal: texture_normalN
 
+			// 1. diffuse maps
+			std::vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
+			textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
 		}
 
 		return Mesh(vertices, indices, textures);
 	}
+
+	std::vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type, std::string typeName);
 };
