@@ -1,5 +1,5 @@
 #ifndef MESH_H
-#endif MESH_H// !MESH_H
+#define MESH_H
 
 #include <glad/glad.h> // holds all OpenGL type declarations
 
@@ -27,6 +27,7 @@ struct Texture
 {
 	unsigned int id;
 	std::string type;
+	std::string path;
 };
 
 class Mesh
@@ -101,3 +102,4 @@ private:
 		glBindVertexArray(0);
 	}
 };
+#endif
