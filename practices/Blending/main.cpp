@@ -265,7 +265,7 @@ int main(int argc, char* argv[])
         ourShader.setMat4("model", model);
         glDrawArrays(GL_TRIANGLES, 0, 6);
         // windows (from furthest to nearest)
-        //glDisable(GL_DEPTH_TEST);
+        glDisable(GL_DEPTH_TEST);
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glBindVertexArray(transparentVAO);
